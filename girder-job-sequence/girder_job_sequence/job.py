@@ -52,12 +52,19 @@ class Job:
     def get_plugin_info(self):
         """Finding the plugin in the provided DSA instance either by id or combination of docker_image and cli_name
         """
+        executable_dict = None
         if self.plugin_id is None:
             # Already asserted, if self.job_id is None then docker_image and cli have to be defined
             plugin_info = id_from_info(self.gc, self.docker_image, self.cli)
 
             if not plugin_info is None:
                 self.plugin_id = plugin_info['_id']
+                executable_dict = self.get_executable()
+        else:
+            executable_dict = self.get_executable()
+
+
+        return executable_dict
 
     def get_executable(self)->dict:
         """Create the executable dictionary for this plugin. Finds plugin descriptive information and organizes inputs in a ready-to-use format.
@@ -86,9 +93,9 @@ class Job:
                 parameters_list = []
                 for param in plugin_xml.iterfind('parameters'):
                     param_dict = {
-                        'advanced': param.get('advanced',default=False),
-                        'label': param.get('label',default=None),
-                        'description': param.get('description',default=None)
+                        'advanced': param.find('advanced'),
+                        'label': param.find('label'),
+                        'description': param.find('description')
                     }
 
                     param_dict = get_text_key_vals(param_dict)
@@ -98,11 +105,11 @@ class Job:
                         if sub_el.tag in PARAMETER_TAGS:
                             input_dict = {
                                 'type': sub_el.tag,
-                                'label': sub_el.get('label',default=None),
-                                'name': sub_el.get('name',default=None),
-                                'channel': sub_el.get('channel',default=None),
-                                'description': sub_el.get('description',default=None),
-                                'default': sub_el.get('default',default=None)
+                                'label': sub_el.find('label'),
+                                'name': sub_el.find('name'),
+                                'channel': sub_el.find('channel'),
+                                'description': sub_el.find('description'),
+                                'default': sub_el.find('default')
                             }
                             input_dict = get_text_key_vals(input_dict)
 
@@ -114,12 +121,12 @@ class Job:
                                 input_dict['options'] = options_list
                         
                             if not sub_el.find('constraints') is None:
-                                constraints = sub_el.get('constraints',default=None)
+                                constraints = sub_el.find('constraints')
                                 if not constraints is None:
                                     constraints_dict = {
-                                        'min': constraints.get('min',default=None),
-                                        'max': constraints.get('max',default=None),
-                                        'step': constraints.get('step',default=None)
+                                        'min': constraints.find('min'),
+                                        'max': constraints.find('max'),
+                                        'step': constraints.find('step')
                                     }
                                     constraints_dict = get_text_key_vals(constraints_dict)
 
@@ -133,6 +140,9 @@ class Job:
 
                 executable_dict['parameters'] = parameters_list
 
+            else:
+                print(plugin_xml_req.content)
+
         return executable_dict
 
     def get_defaults(self)->list:
@@ -145,12 +155,7 @@ class Job:
         if not self.executable_dict is None:
             for p in self.executable_dict['parameters']:
                 for i in p['inputs']:
-                    defaults_list.append(
-                    {
-                        'label':i['label'],
-                        'default': i['default']
-                    } if not i['label'] is None else
-                    {
+                    defaults_list.append({
                         'name': i['name'],
                         'default': i['default']
                     })
@@ -178,7 +183,7 @@ class Job:
             for i in self.input_args:
                 if type(i['value'])==str:
                     if check_wildcard(i['value']):
-                        i['value'] = parse_wildcard(i['value'])
+                        i['value'] = parse_wildcard(self.gc, i['value'])
         
         else:
             user_input_names = []
@@ -187,6 +192,7 @@ class Job:
         input_names = []
         # Replacing default values
         plugin_defaults = self.get_defaults()
+        print(plugin_defaults)
         for p_d in plugin_defaults:
             if 'name' in p_d:
                 if p_d['name'] in user_input_names:

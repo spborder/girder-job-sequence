@@ -65,7 +65,7 @@ class Sequence:
         status_list = []
         for j in self.jobs:
             status_list.append(
-                {'Job Name': j.executable_dict.title, 'Status': j.get_status()}
+                {'Job Name': j.executable_dict["title"], 'Status': j.get_status()}
             )
 
         return status_list
@@ -99,13 +99,11 @@ class Sequence:
 
         # This might not actually be possible to add
         put_response = self.gc.put(
-            f'/job/{job.job_id}',
+            f'/job/{job.job_id}/metadata',
             data = {
-                'meta': {
-                    'part_of': self.id,
-                    'preceded_by': self.jobs[job_idx-1].job_id if job_idx>0 else '',
-                    'followed_by': self.jobs[job_idx+1].plugin_id if len(self.jobs)>job_idx+1 else ''
-                }
+                'part_of': self.id,
+                'preceded_by': self.jobs[job_idx-1].job_id if job_idx>0 else '',
+                'followed_by': self.jobs[job_idx+1].plugin_id if len(self.jobs)>job_idx+1 else ''
             }
         )
 
@@ -130,7 +128,7 @@ class Sequence:
             if job_request.status_code==200:
                 #job_info = job_request.json()
                 current_status = job.get_status()
-                self.add_sequence_metadata(job,job_idx)
+                #self.add_sequence_metadata(job,job_idx)
 
                 while not current_status in ['SUCCESS','ERROR','CANCELED']:
                     sleep(check_interval)
@@ -139,7 +137,7 @@ class Sequence:
 
                     if verbose:
                         print('-------------------------')
-                        print(f'On {job.executable_dict.title}, Status: {current_status}')
+                        print(f'On {job.executable_dict["title"]}, Status: {current_status}')
                         print('-------------------------')
 
 
@@ -147,7 +145,7 @@ class Sequence:
                         
                         if verbose:
                             print('XXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-                            print(f'{current_status} encountered on job: {job.job_id}, {job.executable_dict.title}')
+                            print(f'{current_status} encountered on job: {job.job_id}, {job.executable_dict["title"]}')
                             print('XXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
                         if cancel_on_error:

@@ -1,2 +1,2 @@
-from job import Job
-from sequence import Sequence
+from .job import Job
+from .sequence import Sequence

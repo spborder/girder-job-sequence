@@ -3,12 +3,13 @@
 
 import os
 import sys
-print(sys.path)
-sys.path.append('./girder_job_sequence/')
+sys.path.append('.\\girder-job-sequence\\')
 from girder_job_sequence import Job, Sequence
 from girder_job_sequence.utils import from_list
 
 from girder_client import GirderClient
+import json
+
 
 def main():
 
@@ -35,7 +36,7 @@ def main():
             'input_args': [
                 {
                     'name': 'input_image',
-                    'value': "{{'type':'file','item_type':'path','item_query':'/user/sam123/Public/FUSION_Upload_2024_10_22_13_56_05_219929/XY01_IU-21-015F_001.svs','file_type':'name','file_query':'XY01_IU-21-015F_001.svs'}}"
+                    'value': "{{'type':'file','item_type':'path','item_query':'/user/sam123/Public/FUSION_Upload_2024_10_22_13_56_05_219929/XY01_IU-21-015F_001.svs','file_type':'fileName','file_query':'XY01_IU-21-015F_001.svs'}}"
                 },
                 {
                     'name': 'extract_sub_compartments',
@@ -71,9 +72,12 @@ def main():
     )
 
     job_sequence = from_list(gc,job_list)
+    print(job_sequence)
+    for j in job_sequence.jobs:
+        print(json.dumps(j.inputs,indent=4))
 
     # Running sequence on same thread
-    job_sequence.start(verbose = True)
+    job_sequence.start(verbose = True,cancel_on_error=True)
 
 
 

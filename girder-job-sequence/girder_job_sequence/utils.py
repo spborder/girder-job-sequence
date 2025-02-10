@@ -42,54 +42,55 @@ def get_text_key_vals(xml_dict:dict):
     """
     return_dict = xml_dict.copy()
     for key,val in return_dict.items():
-        try:
-            return_dict[key] = val.text
-        except:
-            continue
+        if not val is None:
+            try:
+                return_dict[key] = val.text
+            except:
+                return_dict[key] = val
     
     return return_dict
 
 def find_item(gc,type: str, query:str):
 
     if type=='path':
-        item_info = gc.get(f'/resource/lookup',parameters={'path': query})
+        item_info = gc.get(f'/resource/lookup',parameters={'path': query})['_id']
     elif type=='_id':
-        item_info = gc.get(f'/item/{query}')
+        item_info = gc.get(f'/item/{query}')['_id']
 
     return item_info
 
 def find_file(gc, item_type:str, item_query:str, file_type:str, file_query:str):
 
     if item_type == 'path':
-        item_info = find_item(item_type, item_query)
+        item_info = find_item(gc,item_type, item_query)
     elif item_type=='_id':
-        item_info = {'_id': item_query}
+        item_info = item_query
     
     if file_type == 'fileName':
-        item_files = gc.get(f'/item/{item_info["_id"]}/files',parameters = {'limit': 0})
+        item_files = gc.get(f'/item/{item_info}/files',parameters = {'limit': 0})
 
         file_names = [i['name'] for i in item_files]
-        file_info = item_files[file_names.index(file_query)]
+        file_info = item_files[file_names.index(file_query)]['_id']
     
     elif file_type == '_id':
-        file_info = {'_id': file_query}
+        file_info = file_query
 
     return file_info
 
 def find_annotation(gc, item_type, item_query, annotation_type, annotation_query):
 
     if item_type=='path': 
-        item_info = find_item(item_type,item_query)
+        item_info = find_item(gc, item_type,item_query)
     elif item_type == '_id':
-        item_info = {'_id': item_query}
+        item_info = item_query
 
     if annotation_type == 'annotationName':
         item_annotations = gc.get(f'/annotation',parameters={'itemId': item_info["_id"]})
 
         annotation_names = [i['annotation']['name'] for i in item_annotations]
-        annotation_info = item_annotations[annotation_names.index(annotation_query)]
+        annotation_info = item_annotations[annotation_names.index(annotation_query)]['_id']
     elif annotation_type=='annotationId':
-        annotation_info = {'_id': annotation_query}
+        annotation_info = annotation_query
 
     return annotation_info
 
@@ -111,8 +112,7 @@ def parse_wildcard(gc, wildcard_str:str):
     """
     # Verifying this is a wildcard candidate
     assert '{{' in wildcard_str
-
-    wildcard_args = json.loads(wildcard_str[1:-1])
+    wildcard_args = json.loads(wildcard_str[1:-1].replace("'",'"'))
 
     if wildcard_args['type']=='item':
         wildcard_val = find_item(gc, wildcard_args['item_type'], wildcard_args['item_query'])
@@ -158,9 +158,10 @@ def from_dict(gc, dict_data:dict):
     :type dict_data: dict
     """
     from .job import Job
+
     job_from_dict = Job(
         gc = gc,
-        id = dict_data['id'] if 'id' in dict_data else None,
+        plugin_id = dict_data['plugin_id'] if 'plugin_id' in dict_data else None,
         docker_image=dict_data['docker_image'] if 'docker_image' in dict_data else None,
         cli= dict_data['cli'] if 'cli' in dict_data else None,
         input_args = dict_data['input_args'] if 'input_args' in dict_data else None
@@ -178,7 +179,7 @@ def from_list(gc, list_data:list):
     job_list = []
     for l in list_data:
         job_list.append(
-            from_dict(l)
+            from_dict(gc,l)
         )
 
     if len(job_list)>1:
