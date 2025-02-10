@@ -4,7 +4,6 @@
 import os
 import sys
 sys.path.append('.\\girder-job-sequence\\')
-from girder_job_sequence import Job, Sequence
 from girder_job_sequence.utils import from_list
 
 from girder_client import GirderClient
