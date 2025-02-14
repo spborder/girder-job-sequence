@@ -257,7 +257,7 @@ class Job:
         # Removing null inputs
         for input_pair in range(len(inputs_list)):
             if inputs_list[input_pair]['value'] is None:
-                inputs_list.pop(input_pair)
+                inputs_list.remove(inputs_list[input_pair])
 
 
         return inputs_list
