@@ -121,25 +121,26 @@ class Sequence:
         """
 
         assert check_interval>0
+        send_new_job = True
 
         for job_idx, job in enumerate(self.jobs):
+
+            if not send_new_job:
+                break
 
             job_request = job.start()
             if job_request.status_code==200:
                 #job_info = job_request.json()
                 current_status = job.get_status()
                 #self.add_sequence_metadata(job,job_idx)
-
                 while not current_status in ['SUCCESS','ERROR','CANCELED']:
                     sleep(check_interval)
-
                     current_status = job.get_status()
 
                     if verbose:
                         print('-------------------------')
                         print(f'On {job.executable_dict["title"]}, Status: {current_status}')
                         print('-------------------------')
-
 
                     if current_status in ['ERROR','CANCELED']:
                         
@@ -153,6 +154,7 @@ class Sequence:
                                 print('Canceling remaining jobs in sequence')
 
                             self.cancel()
+                            send_new_job = False
                             break
             else:
 
@@ -162,11 +164,6 @@ class Sequence:
 
                 if cancel_on_error:
                     self.cancel()
+                    send_new_job = False
                     break
-
-
-
-
-
-
 
