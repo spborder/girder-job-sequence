@@ -73,7 +73,7 @@ def main():
     job_sequence = from_list(gc,job_list)
     print(job_sequence)
     for j in job_sequence.jobs:
-        print(json.dumps(j.inputs,indent=4))
+        print(json.dumps(j.input_args,indent=4))
 
     # Running sequence on same thread
     job_sequence.start(verbose = True,cancel_on_error=True)

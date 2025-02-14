@@ -46,7 +46,6 @@ class Job:
         assert any([not self.plugin_id is None, all([not j is None for j in [self.docker_image, self.cli]])])
 
         self.executable_dict = self.get_plugin_info()
-        self.inputs = self.parse_input_args()
 
 
     def get_plugin_info(self):
@@ -192,7 +191,6 @@ class Job:
         input_names = []
         # Replacing default values
         plugin_defaults = self.get_defaults()
-        print(plugin_defaults)
         for p_d in plugin_defaults:
             if 'name' in p_d:
                 if p_d['name'] in user_input_names:
@@ -256,6 +254,11 @@ class Job:
             
             print(f'Provided inputs: {input_names}')
 
+        # Removing null inputs
+        for input_pair in range(len(inputs_list)):
+            if inputs_list[input_pair]['value'] is None:
+                inputs_list.pop(input_pair)
+
 
         return inputs_list
 
@@ -275,7 +278,10 @@ class Job:
     def start(self):
         """Send start request for this job
         """
-        
+        # Moving input parsing here to account for wildcard inputs that are created prior to execution of 
+        # a job sequence
+        self.inputs = self.parse_input_args()
+
         start_request = requests.post(
             url = self.gc.urlBase+f'slicer_cli_web/cli/{self.plugin_id}/run?token={self.gc.token}',
             params = {
