@@ -153,6 +153,7 @@ class Sequence:
                                 print('Canceling remaining jobs in sequence')
 
                             self.cancel()
+                            break
             else:
 
                 print('Error submitting job request')
@@ -161,6 +162,7 @@ class Sequence:
 
                 if cancel_on_error:
                     self.cancel()
+                    break
 
 
 
