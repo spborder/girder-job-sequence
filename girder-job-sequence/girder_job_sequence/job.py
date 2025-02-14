@@ -255,9 +255,9 @@ class Job:
             print(f'Provided inputs: {input_names}')
 
         # Removing null inputs
-        for input_pair in range(len(inputs_list)):
-            if inputs_list[input_pair]['value'] is None:
-                inputs_list.remove(inputs_list[input_pair])
+        for input_pair in inputs_list:
+            if input_pair['value'] is None:
+                inputs_list.remove(input_pair)
 
 
         return inputs_list
