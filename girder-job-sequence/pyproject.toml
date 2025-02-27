@@ -1,6 +1,6 @@
 [project]
 name = "girder-job-sequence"
-version = "0.2.4"
+version = "0.2.7"
 description = "Utility package for running Girder jobs in a sequence."
 authors = [
     {name = "Sam Border",email = "sam.border2256@gmail.com"}

@@ -154,10 +154,33 @@ class Job:
         if not self.executable_dict is None:
             for p in self.executable_dict['parameters']:
                 for i in p['inputs']:
-                    defaults_list.append({
-                        'name': i['name'],
-                        'default': i['default']
-                    })
+                    if i['type']=='region':
+                        # The default region is usually "-1,-1,-1,-1" which does not meet it's own spec
+                        fixed_region = i['default'].replace('[','').replace(']','').replace(' ','')
+                        fixed_region = [float(i) for i in fixed_region.split(',')]
+                        defaults_list.append({
+                            'name': i['name'],
+                            'default': json.dumps(fixed_region)
+                        })
+                    
+                    elif 'vector' in i['type']:
+                        fixed_vector = i['default'].replace('[','').replace(']','').replace(' ','').split(',')
+                        if not 'string' in i['type']:
+                            if any([j in i['type'] for j in ['float','double']]):
+                                fixed_vector = [float(i) for i in fixed_vector]
+                            elif 'integer' in i['type']:
+                                fixed_vector = [int(i) for i in fixed_vector]
+                        
+                        defaults_list.append({
+                            'name': i['name'],
+                            'default':json.dumps(fixed_vector)
+                        })
+
+                    else:
+                        defaults_list.append({
+                            'name': i['name'],
+                            'default': i['default']
+                        })
 
         return defaults_list
 
